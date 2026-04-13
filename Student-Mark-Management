@@ -1,0 +1,327 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define SUBJECTS 4
+
+char subjectNames[SUBJECTS][30] = {
+    "Physics",
+    "Maths",
+    "Data Structures",
+    "Chemistry"
+};
+
+typedef struct Student {
+    int roll;
+    char name[50];
+    int marks[SUBJECTS];
+    int total;
+    struct Student *prev, *next;
+} Node;
+
+Node *head = NULL;
+
+// Create Node
+Node* createNode() {
+    Node *newNode = (Node*)malloc(sizeof(Node));
+
+    if(newNode == NULL) {
+        printf("Memory allocation failed!\n");
+        exit(1);
+    }
+
+    printf("Enter Roll Number: ");
+    scanf("%d", &newNode->roll);
+
+    getchar();
+
+    printf("Enter Name: ");
+    fgets(newNode->name, sizeof(newNode->name), stdin);
+    newNode->name[strcspn(newNode->name, "\n")] = '\0';
+
+    newNode->total = 0;
+    for(int i = 0; i < SUBJECTS; i++) {
+        printf("Enter marks for %s: ", subjectNames[i]);
+        scanf("%d", &newNode->marks[i]);
+        newNode->total += newNode->marks[i];
+    }
+
+    newNode->prev = newNode->next = NULL;
+    return newNode;
+}
+
+// Insert
+void insert() {
+    Node *newNode = createNode();
+
+    if(head == NULL) {
+        head = newNode;
+        return;
+    }
+
+    Node *temp = head;
+    while(temp->next != NULL)
+        temp = temp->next;
+
+    temp->next = newNode;
+    newNode->prev = temp;
+}
+
+// Display
+void display() {
+    if(head == NULL) {
+        printf("No records found!\n");
+        return;
+    }
+
+    Node *temp = head;
+
+    while(temp != NULL) {
+        printf("\nRoll: %d", temp->roll);
+        printf("\nName: %s", temp->name);
+
+        printf("\nMarks:\n");
+        for(int i = 0; i < SUBJECTS; i++) {
+            printf("%s: %d\n", subjectNames[i], temp->marks[i]);
+        }
+
+        printf("Total: %d", temp->total);
+        printf("\nPercentage: %.2f%%", temp->total / (float)SUBJECTS);
+        printf("\n-----------------------\n");
+
+        temp = temp->next;
+    }
+}
+
+// Search
+void search() {
+    if(head == NULL) {
+        printf("No records found!\n");
+        return;
+    }
+
+    int choice;
+    printf("\n1. Roll\n2. Name\nEnter choice: ");
+    scanf("%d", &choice);
+
+    Node *temp = head;
+
+    if(choice == 1) {
+        int roll;
+        printf("Enter Roll: ");
+        scanf("%d", &roll);
+
+        while(temp != NULL) {
+            if(temp->roll == roll) {
+                printf("\nFound! Name: %s Total: %d\n", temp->name, temp->total);
+                return;
+            }
+            temp = temp->next;
+        }
+    } else {
+        char name[50];
+        getchar();
+        printf("Enter Name: ");
+        fgets(name, sizeof(name), stdin);
+        name[strcspn(name, "\n")] = '\0';
+
+        while(temp != NULL) {
+            if(strcmp(temp->name, name) == 0) {
+                printf("\nFound! Roll: %d Total: %d\n", temp->roll, temp->total);
+                return;
+            }
+            temp = temp->next;
+        }
+    }
+
+    printf("Student not found!\n");
+}
+
+// Safe swap
+void swapData(Node *a, Node *b) {
+    int tempRoll = a->roll;
+    a->roll = b->roll;
+    b->roll = tempRoll;
+
+    char tempName[50];
+    strcpy(tempName, a->name);
+    strcpy(a->name, b->name);
+    strcpy(b->name, tempName);
+
+    int tempMarks[SUBJECTS];
+    for(int i = 0; i < SUBJECTS; i++) {
+        tempMarks[i] = a->marks[i];
+        a->marks[i] = b->marks[i];
+        b->marks[i] = tempMarks[i];
+    }
+
+    int tempTotal = a->total;
+    a->total = b->total;
+    b->total = tempTotal;
+}
+
+// Sort
+void sort() {
+    Node *i, *j;
+    for(i = head; i && i->next; i = i->next) {
+        for(j = i->next; j; j = j->next) {
+            if(i->total < j->total) {
+                swapData(i, j);
+            }
+        }
+    }
+    printf("Sorted successfully!\n");
+}
+
+// Delete
+void deleteStudent() {
+    int roll;
+    printf("Enter Roll to delete: ");
+    scanf("%d", &roll);
+
+    Node *temp = head;
+
+    while(temp) {
+        if(temp->roll == roll) {
+            if(temp == head) {
+                head = temp->next;
+                if(head) head->prev = NULL;
+            } else {
+                temp->prev->next = temp->next;
+                if(temp->next) temp->next->prev = temp->prev;
+            }
+            free(temp);
+            printf("Deleted successfully!\n");
+            return;
+        }
+        temp = temp->next;
+    }
+    printf("Student not found!\n");
+}
+
+// Edit
+void editStudent() {
+    int roll;
+    printf("Enter Roll to edit: ");
+    scanf("%d", &roll);
+
+    Node *temp = head;
+
+    while(temp) {
+        if(temp->roll == roll) {
+            getchar();
+            printf("Enter new name: ");
+            fgets(temp->name, sizeof(temp->name), stdin);
+            temp->name[strcspn(temp->name, "\n")] = '\0';
+
+            temp->total = 0;
+            for(int i = 0; i < SUBJECTS; i++) {
+                printf("Enter new marks for %s: ", subjectNames[i]);
+                scanf("%d", &temp->marks[i]);
+                temp->total += temp->marks[i];
+            }
+
+            printf("Updated successfully!\n");
+            return;
+        }
+        temp = temp->next;
+    }
+    printf("Student not found!\n");
+}
+
+// Pass/Fail + Failed Subjects
+void passFailReport() {
+    Node *temp = head;
+
+    while(temp) {
+        int pass = 1;
+        int failedAny = 0;
+
+        printf("\nRoll: %d", temp->roll);
+        printf("\nName: %s", temp->name);
+
+        printf("\nFailed Subjects: ");
+        for(int i = 0; i < SUBJECTS; i++) {
+            if(temp->marks[i] < 40) {
+                printf("%s ", subjectNames[i]);
+                pass = 0;
+                failedAny = 1;
+            }
+        }
+
+        if(!failedAny)
+            printf("None");
+
+        printf("\nStatus: %s", pass ? "PASS" : "FAIL");
+        printf("\n-----------------------\n");
+
+        temp = temp->next;
+    }
+}
+
+// Subject toppers
+void subjectToppers() {
+    for(int i = 0; i < SUBJECTS; i++) {
+        Node *temp = head;
+        Node *topper = head;
+
+        while(temp) {
+            if(temp->marks[i] > topper->marks[i])
+                topper = temp;
+            temp = temp->next;
+        }
+
+        printf("\nTopper in %s: %s (%d)\n",
+               subjectNames[i], topper->name, topper->marks[i]);
+    }
+}
+
+// Subject-wise report
+void subjectWiseReport() {
+    int pass[SUBJECTS] = {0}, fail[SUBJECTS] = {0};
+
+    Node *temp = head;
+
+    while(temp) {
+        for(int i = 0; i < SUBJECTS; i++) {
+            if(temp->marks[i] >= 40)
+                pass[i]++;
+            else
+                fail[i]++;
+        }
+        temp = temp->next;
+    }
+
+    printf("\n--- Subject Wise Report ---\n");
+    for(int i = 0; i < SUBJECTS; i++) {
+        printf("\n%s\nPassed: %d\nFailed: %d\n",
+               subjectNames[i], pass[i], fail[i]);
+    }
+}
+
+// Main
+int main() {
+    int choice;
+
+    while(1) {
+        printf("\n--- Student Management System ---\n");
+        printf("1. Add\n2. Display\n3. Search\n4. Sort\n5. Pass/Fail\n");
+        printf("6. Toppers\n7. Delete\n8. Edit\n9. Subject Report\n10. Exit\n");
+        printf("Enter choice: ");
+        scanf("%d", &choice);
+
+        switch(choice) {
+            case 1: insert(); break;
+            case 2: display(); break;
+            case 3: search(); break;
+            case 4: sort(); break;
+            case 5: passFailReport(); break;
+            case 6: subjectToppers(); break;
+            case 7: deleteStudent(); break;
+            case 8: editStudent(); break;
+            case 9: subjectWiseReport(); break;
+            case 10: exit(0);
+            default: printf("Invalid choice!\n");
+        }
+    }
+}
