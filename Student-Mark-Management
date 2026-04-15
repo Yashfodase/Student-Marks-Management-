@@ -173,61 +173,6 @@ void sort() {
     printf("Sorted successfully!\n");
 }
 
-// Delete
-void deleteStudent() {
-    int roll;
-    printf("Enter Roll to delete: ");
-    scanf("%d", &roll);
-
-    Node *temp = head;
-
-    while(temp) {
-        if(temp->roll == roll) {
-            if(temp == head) {
-                head = temp->next;
-                if(head) head->prev = NULL;
-            } else {
-                temp->prev->next = temp->next;
-                if(temp->next) temp->next->prev = temp->prev;
-            }
-            free(temp);
-            printf("Deleted successfully!\n");
-            return;
-        }
-        temp = temp->next;
-    }
-    printf("Student not found!\n");
-}
-
-// Edit
-void editStudent() {
-    int roll;
-    printf("Enter Roll to edit: ");
-    scanf("%d", &roll);
-
-    Node *temp = head;
-
-    while(temp) {
-        if(temp->roll == roll) {
-            getchar();
-            printf("Enter new name: ");
-            fgets(temp->name, sizeof(temp->name), stdin);
-            temp->name[strcspn(temp->name, "\n")] = '\0';
-
-            temp->total = 0;
-            for(int i = 0; i < SUBJECTS; i++) {
-                printf("Enter new marks for %s: ", subjectNames[i]);
-                scanf("%d", &temp->marks[i]);
-                temp->total += temp->marks[i];
-            }
-
-            printf("Updated successfully!\n");
-            return;
-        }
-        temp = temp->next;
-    }
-    printf("Student not found!\n");
-}
 
 // Pass/Fail + Failed Subjects
 void passFailReport() {
@@ -258,55 +203,13 @@ void passFailReport() {
         temp = temp->next;
     }
 }
-
-// Subject toppers
-void subjectToppers() {
-    for(int i = 0; i < SUBJECTS; i++) {
-        Node *temp = head;
-        Node *topper = head;
-
-        while(temp) {
-            if(temp->marks[i] > topper->marks[i])
-                topper = temp;
-            temp = temp->next;
-        }
-
-        printf("\nTopper in %s: %s (%d)\n",
-               subjectNames[i], topper->name, topper->marks[i]);
-    }
-}
-
-// Subject-wise report
-void subjectWiseReport() {
-    int pass[SUBJECTS] = {0}, fail[SUBJECTS] = {0};
-
-    Node *temp = head;
-
-    while(temp) {
-        for(int i = 0; i < SUBJECTS; i++) {
-            if(temp->marks[i] >= 40)
-                pass[i]++;
-            else
-                fail[i]++;
-        }
-        temp = temp->next;
-    }
-
-    printf("\n--- Subject Wise Report ---\n");
-    for(int i = 0; i < SUBJECTS; i++) {
-        printf("\n%s\nPassed: %d\nFailed: %d\n",
-               subjectNames[i], pass[i], fail[i]);
-    }
-}
-
 // Main
 int main() {
     int choice;
 
     while(1) {
         printf("\n--- Student Management System ---\n");
-        printf("1. Add\n2. Display\n3. Search\n4. Sort\n5. Pass/Fail\n");
-        printf("6. Toppers\n7. Delete\n8. Edit\n9. Subject Report\n10. Exit\n");
+        printf("1. Add\n2. Display\n3. Search\n4. Sort\n5. Pass/Fail\n6.Exit\n");
         printf("Enter choice: ");
         scanf("%d", &choice);
 
@@ -316,11 +219,7 @@ int main() {
             case 3: search(); break;
             case 4: sort(); break;
             case 5: passFailReport(); break;
-            case 6: subjectToppers(); break;
-            case 7: deleteStudent(); break;
-            case 8: editStudent(); break;
-            case 9: subjectWiseReport(); break;
-            case 10: exit(0);
+            case 6: exit(0);
             default: printf("Invalid choice!\n");
         }
     }
